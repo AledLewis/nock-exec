@@ -14,9 +14,11 @@
     "url": "https://github.com/vlad-c/nock-exec.git"
   },
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec"
+    "test": "istanbul cover _mocha -- -R spec",
+    "codeclimate": "CODECLIMATE_REPO_TOKEN=fc2fc44310eac977786db793b2e783a763545685bb64b635415dacc41fdbe8f0 codeclimate < coverage/lcov.info"
   },
   "devDependencies": {
+    "codeclimate-test-reporter": "0.0.4",
     "expect.js": "^0.3.1",
     "istanbul": "^0.3.8",
     "mocha": "^2.2.1",
