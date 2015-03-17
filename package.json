@@ -4,7 +4,11 @@
   "description": "NodeJS mock module around the child_process.exec function inspired by nock.",
   "main": "./nock-exec.js",
   "author": "Vladimir Clausse",
-  "keywords": ["mock", "exec", "testing"],
+  "keywords": [
+    "mock",
+    "exec",
+    "testing"
+  ],
   "engines": {
     "node": ">=0.8.0"
   },
@@ -12,9 +16,13 @@
     "type": "git",
     "url": "https://github.com/vlad-c/nock-exec.git"
   },
-  "devDependencies": {
-    "mocha": "^1.21.3"
+  "scripts": {
+    "test": "istanbul cover _mocha -- -R spec"
   },
-  "dependencies": {
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "istanbul": "^0.3.8",
+    "mocha": "^2.2.1",
+    "sinon": "^1.14.1"
   }
 }

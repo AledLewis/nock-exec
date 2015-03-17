@@ -63,40 +63,43 @@ function ProcessMock(command) {
 
 ProcessMock.prototype._run = function(options, callback) {
     var self = this;
+    var err;
     this._callback = callback;
     process.nextTick(function() {
         self._exited = false;
         this._actions.forEach(function (action) {
             if (self._exited) {
-                throw new Error('Command ' + self._command + ' has already exited');
+                return err = new Error('Command ' + self._command + ' has already exited');
             }
             switch (action.op) {
                 case 'out':
                     if (typeof action.arg === 'function') {
                         action.arg(self.stdout);
                     }
-                    else if (typeof action.arg === 'string') {
-                        self.stdout.write(action.arg);
+                    else {
+                        self.stdout.write('' + action.arg);
                     }
                     break;
                 case 'err':
                     if (typeof action.arg === 'function') {
                         action.arg(self.stderr);
                     }
-                    else if (typeof action.arg === 'string') {
-                        self.stderr.write(action.arg);
+                    else {
+                        self.stderr.write('' + action.arg);
                     }
                     break;
                 case 'exit':
                     self._exited = true;
                     self.emit('exit', action.arg);
+                    err = new Error('Exited with code ' + action.arg);
+                    err.code = action.arg;
                     break;
             }
         });
         if (typeof callback === 'function') {
-            var out = self.stdout.cache();
-            var err = self.stderr.cache();
-            callback(null, out, err);
+            var stdout = self.stdout.cache();
+            var stderr = self.stderr.cache();
+            callback(err, stdout, stderr);
         }
     }.bind(this));
     return this;
