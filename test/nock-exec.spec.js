@@ -74,7 +74,8 @@ describe('nock exec', function () {
 
       exec(cmd, function (err, stdout, stderr) {
         expect(err.code).to.be(127);
-        expect(stderr).to.contain('foo: command not found');
+        expect(stderr).to.contain('foo');
+        expect(stderr).to.contain('not found');
         done();
       });
     });
