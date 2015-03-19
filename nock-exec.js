@@ -133,6 +133,10 @@ ProcessMock.prototype.exit = function(code) {
     return this;
 };
 
+ProcessMock.prototype.ran = function() {
+    return this._exited;
+};
+
 var interceptors = {};
 var exec = null;
 

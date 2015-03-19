@@ -132,4 +132,24 @@ describe('nock exec', function () {
       });
     });
   });
+
+  it('should report if it has been run', function (done) {
+    var instance = nockExec(cmd)
+      .exit(100);
+
+    exec(cmd, function (err, stdout, stderr) {
+      expect(instance.ran()).to.be.ok();
+      done();
+    });
+  });
+
+  it('should report if it has not been run', function (done) {
+    var instance = nockExec(cmd)
+      .exit(100);
+
+    exec('ls', function (err, stdout, stderr) {
+      expect(instance.ran()).not.to.be.ok();
+      done();
+    });
+  });
 });
