@@ -201,6 +201,10 @@ function overrideExec(command /*, options, callback*/) {
     }
 }
 
+function reset(){
+  interceptors={};
+}
+
 function start() {
     if (exec !== null) {
         return;
@@ -232,3 +236,5 @@ module.exports = record;
  * @type {{exec: Function}}
  */
 module.exports.moduleStub = childProcessStub;
+
+module.exports.reset = reset;

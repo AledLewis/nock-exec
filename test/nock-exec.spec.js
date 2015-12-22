@@ -1,4 +1,4 @@
-var cmd = 'foo',
+var cmd,
     expect = require('expect.js'),
     nockExec = require('../nock-exec'),
     os = require('os'),
@@ -6,8 +6,10 @@ var cmd = 'foo',
     exec;
 
 describe('nock exec', function () {
-  beforeEach(function () {
+  before(function () {
     exec = require('child_process').exec;
+    nockExec.reset();
+    cmd = 'foo';
   });
 
   it('should reply with a code and message', function (done) {
@@ -63,22 +65,50 @@ describe('nock exec', function () {
       done();
     });
   });
+  
+  describe("running once", function(){
+    describe("when once is set", function(){
+      
+      before(function(){
+        nockExec(cmd)
+          .once()
+          .err('foo')
+          .exit(0);
+      });
+      
+      it('only mocks once', function (done) {
+        
 
-  it('should only mock once', function (done) {
-    nockExec(cmd)
-      .once()
-      .err('foo');
+        exec(cmd, function (err, stdout, stderr) {
+          expect(err.code).to.be(0);
 
-    exec(cmd, function (err, stdout, stderr) {
-      expect(stderr).to.be('foo');
-
-      exec(cmd, function (err, stdout, stderr) {
-        expect(err.code).to.be(127);
-        expect(stderr).to.contain('foo');
-        expect(stderr).to.contain('not found');
-        done();
+          exec(cmd, function (err, stdout, stderr) {
+            expect(err.code).not.to.be(0);
+            done();
+          });
+        });
       });
     });
+    
+    describe ("when once is not set", function(){
+      before(function(){
+        nockExec(cmd)
+          .err('foo')
+          .exit(0);
+      });
+      it('mocks multiple times', function (done) {
+        exec(cmd, function (err, stdout, stderr) {
+          expect(err.code).to.be(0);
+
+          exec(cmd, function (err, stdout, stderr) {
+            expect(err.code).to.be(0);
+            done();
+          });
+        });
+      });
+      
+    });
+  
   });
 
   it('should output an exit code', function (done) {
@@ -100,6 +130,8 @@ describe('nock exec', function () {
       done();
     });
   });
+  
+  
 
   it('should run stdout and stderr function callbacks', function (done) {
     var errSpy = sinon.spy(),
@@ -151,5 +183,49 @@ describe('nock exec', function () {
       expect(instance.ran()).not.to.be.ok();
       done();
     });
+  });
+  
+  describe("clearing mocks", function(){
+    before(function(){
+      var instance = nockExec(cmd)
+      .exit(100);
+    });
+    it("does not retain mocks after clearing", function(done){
+      nockExec.reset();
+      exec(cmd, {}, function (err, stdout, stderr) {
+        expect(err.code).not.to.be(100);
+        done();
+      });
+    });
+    
+    
+  
+  });
+  
+  describe ('regular expression matching', function(){
+    before(function(){
+      var instance = nockExec(cmd+" bar.+")
+        .regex()
+        .exit(0);
+    });
+    describe ('when matching', function(){
+      it('mocks the run', function(done){
+        exec(cmd+" bard", function (err, stdout, stderr) {
+          expect(err.code).to.be(0);
+          done();
+        });
+      });
+      
+    });
+    
+    describe ('when not matching', function(){
+      it('doesn\'t mock the run', function(done){
+        exec(cmd+" baz", function (err, stdout, stderr) {
+          expect(err.code).not.to.be(0);
+          done();
+        });
+      });
+    });
+    
   });
 });
