@@ -31,6 +31,13 @@ nockExec('myapp').once().err('some error').reply(0, 'This command was mocked');
 ```
 If you try to call this command again will not work.
 
+You can match based on a regular expression
+```js
+var nockExec = require('nock-exec');
+nockExec('myapp.*').regex().err('some error').reply(0, 'This command was matched using a regex');
+```
+
+
 # To do
 ## arguments
 Manage conditional arguments like
