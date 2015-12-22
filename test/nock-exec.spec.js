@@ -3,13 +3,42 @@ var cmd,
     nockExec = require('../nock-exec'),
     os = require('os'),
     sinon = require('sinon'),
-    exec;
+    exec, 
+    nock;
 
 describe('nock exec', function () {
   before(function () {
     exec = require('child_process').exec;
     nockExec.reset();
     cmd = 'foo';
+  });
+  
+  describe('error codes', function() {
+    before(function(){
+      nock = nockExec(cmd);
+    });
+    describe('when the code is 0', function(){
+      before(function(){
+        nock.exit(0);
+      });
+      it('err is undefined', function(done){
+        exec(cmd, function (err, stdout, stderr) {
+           expect(err).to.be(null);
+           done();
+        });
+      }); 
+    });
+    describe('when the code is non 0', function(){
+      before(function(){
+        nock.exit(1);
+      });
+      it('err is not undefined', function(done){
+        exec(cmd, function (err, stdout, stderr) {
+           expect(err).not.to.be(null);
+           done();
+        });
+      }); 
+    });
   });
 
   it('should reply with a code and message', function (done) {
@@ -80,10 +109,10 @@ describe('nock exec', function () {
         
 
         exec(cmd, function (err, stdout, stderr) {
-          expect(err.code).to.be(0);
+          expect(stderr).to.be('foo');
 
           exec(cmd, function (err, stdout, stderr) {
-            expect(err.code).not.to.be(0);
+            expect(stderr).not.to.be('foo');
             done();
           });
         });
@@ -98,10 +127,10 @@ describe('nock exec', function () {
       });
       it('mocks multiple times', function (done) {
         exec(cmd, function (err, stdout, stderr) {
-          expect(err.code).to.be(0);
+          expect(stderr).to.be('foo');
 
           exec(cmd, function (err, stdout, stderr) {
-            expect(err.code).to.be(0);
+            expect(stderr).to.be('foo');
             done();
           });
         });
@@ -206,12 +235,13 @@ describe('nock exec', function () {
     before(function(){
       var instance = nockExec(cmd+" bar.+")
         .regex()
+        .out("foo")
         .exit(0);
     });
     describe ('when matching', function(){
       it('mocks the run', function(done){
         exec(cmd+" bard", function (err, stdout, stderr) {
-          expect(err.code).to.be(0);
+          expect(stdout).to.be("foo");
           done();
         });
       });
@@ -221,7 +251,7 @@ describe('nock exec', function () {
     describe ('when not matching', function(){
       it('doesn\'t mock the run', function(done){
         exec(cmd+" baz", function (err, stdout, stderr) {
-          expect(err.code).not.to.be(0);
+          expect(stdout).not.to.be("foo");
           done();
         });
       });

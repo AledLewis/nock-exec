@@ -56,15 +56,16 @@ function ProcessMock(command) {
     this._exited = false;
     this._callback = undefined;
     this._commandMatchStrategy = CommandMatchStrategy.STRING;
-    this.stdout = new DirectDuplex();
-    this.stderr = new DirectDuplex();
-    this.stdin = new DirectDuplex();
+    
 }
 
 ProcessMock.prototype._run = function(options, callback) {
     var self = this;
     var err;
     this._callback = callback;
+    this.stdout = new DirectDuplex();
+    this.stderr = new DirectDuplex();
+    this.stdin = new DirectDuplex();
     process.nextTick(function() {
         self._exited = false;
         this._actions.forEach(function (action) {
@@ -91,8 +92,13 @@ ProcessMock.prototype._run = function(options, callback) {
                 case 'exit':
                     self._exited = true;
                     self.emit('exit', action.arg);
-                    err = new Error('Exited with code ' + action.arg);
-                    err.code = action.arg;
+                    if (action.arg !== 0){                    
+                      err = new Error('Exited with code ' + action.arg);
+                      err.code = action.arg;
+                    }
+                    else{
+                      err = null;
+                    }
                     break;
             }
         });
