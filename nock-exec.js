@@ -9,6 +9,13 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var os = require('os');
 
+var CommandMatchStrategy = {
+    STRING : "STRING",
+    REGEX : "REGEX"
+};
+
+Object.freeze(CommandMatchStrategy);
+
 util.inherits(DirectDuplex, Stream.Duplex);
 function DirectDuplex(options) {
     if (!(this instanceof DirectDuplex))
@@ -48,6 +55,7 @@ function ProcessMock(command) {
     this._once = false;
     this._exited = false;
     this._callback = undefined;
+    this._commandMatchStrategy = CommandMatchStrategy.STRING;
     this.stdout = new DirectDuplex();
     this.stderr = new DirectDuplex();
     this.stdin = new DirectDuplex();
@@ -128,6 +136,11 @@ ProcessMock.prototype.once = function() {
     return this;
 };
 
+ProcessMock.prototype.regex = function() {
+    this._commandMatchStrategy = CommandMatchStrategy.REGEX;
+    return this;
+};
+
 ProcessMock.prototype.exit = function(code) {
     this._actions.push({op: 'exit', arg: code});
     return this;
@@ -149,13 +162,36 @@ function overrideExec(command /*, options, callback*/) {
         options = arguments[1];
         callback = arguments[2];
     }
-
-    if (command in interceptors) {
-        var interceptor = interceptors[command];
-        if (interceptor._once) {
-            delete interceptors[command];
+    
+    var selectedCommand;
+    
+    // loop over each interceptor, work out if it matches the supplied command
+    var matchedCommands = Object.keys(interceptors).filter(function(interceptCommand){
+        switch(interceptors[interceptCommand]._commandMatchStrategy){
+            case CommandMatchStrategy.STRING:
+                return command === interceptCommand;
+                break;
+            case CommandMatchStrategy.REGEX:
+                var regex = new RegExp(interceptCommand);
+                return regex.test(command);
+            default:
+                throw ("Unexpected CommandMatchStrategy:"
+                    + interceptors[interceptCommand]._commandMatchStrategy);
         }
-        return interceptor._run(options, callback);
+    });
+    
+    // select the first matching one. Object.keys orders the command keys so it'll pick the first lexically I imagine
+    // TODO: add an order added to introduce ordinality based on order of addition
+    if (matchedCommands) {
+      selectedCommand = matchedCommands[0];
+    }
+    
+    if (selectedCommand) {
+        var selectedInterceptor = interceptors[selectedCommand];
+        if (selectedInterceptor._once) {
+            delete interceptors[selectedInterceptor._command];
+        }
+        return selectedInterceptor._run(options, callback);
     }
     else {
         if (exec === null) {

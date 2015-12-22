@@ -4,21 +4,21 @@ var os = require('os');
 var dir = os.tmpdir();
 var cmdLine = 'dir ' + dir;
 
-function start() {
-    command = exec(cmdLine);
+function start(testNo, args) {
+    command = exec(cmdLine+args);
     command.stdin.end();
 
     command.stdout.on('data', function (data) {
-        console.log('got listing data:' + data);
+        console.log(testNo + ': got listing data:' + data);
     });
 
     command.on('error', function (err) {
-        console.log('ERROR: Listing ' + dir);
+        console.log(testNo + ': ERROR: Listing ' + dir);
         console.log(err);
     });
 
     command.on('exit', function (code) {
-        console.log('-- done listing ' + dir + ' / exit=' + code);
+        console.log(testNo + ':-- done listing ' + dir + ' / exit=' + code);
     });
 }
 
