@@ -21,7 +21,7 @@ describe('nock exec', function () {
       before(function(){
         nock.exit(0);
       });
-      it('err is undefined', function(done){
+      it('err is null', function(done){
         exec(cmd, function (err, stdout, stderr) {
            expect(err).to.be(null);
            done();
@@ -32,7 +32,7 @@ describe('nock exec', function () {
       before(function(){
         nock.exit(1);
       });
-      it('err is not undefined', function(done){
+      it('err is not null', function(done){
         exec(cmd, function (err, stdout, stderr) {
            expect(err).not.to.be(null);
            done();
